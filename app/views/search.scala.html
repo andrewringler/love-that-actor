@@ -9,7 +9,7 @@
         @movies.map { movie =>
             <li>
                 @movie.title
-                @form(routes.Application.newLike(movie.title)) {
+                @form(routes.Application.newLike(movie.id)) {
                     <input type="submit" value="Like">
                 }
             </li>

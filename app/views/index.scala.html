@@ -1,4 +1,4 @@
-@(likes: List[Like], movies: List[Movie], searchForm: Form[String])
+@(likes: List[Like], searchForm: Form[String])
 @import helper._
 
 @main("Likes") {
@@ -7,7 +7,7 @@
     <ul>
         @likes.map { like =>
             <li>
-                @like.label
+                @like.movie.title
                 @form(routes.Application.deleteLike(like.id)) {
                     <input type="submit" value="Delete">
                 }

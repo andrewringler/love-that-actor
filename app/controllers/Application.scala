@@ -7,13 +7,15 @@ import play.api.data.Forms._
 import models.Like
 import models.Movie
 import play.api.Logger
+import models.TmdbMovie
+import java.util.Date
 
 object Application extends Controller {
   val searchForm = Form(
     "s" -> nonEmptyText)
 
   def index = Action {
-    Ok(views.html.index(Like.all(), Nil, searchForm))
+    Ok(views.html.index(Like.all(), searchForm))
   }
 
   // Likes
@@ -21,8 +23,8 @@ object Application extends Controller {
     Ok(views.html.likes(Like.all()))
   }
   
-  def newLike(label: String) = Action {
-	Like.create(label)
+  def newLike(movieId: Long) = Action {
+	Like.create(movieId)
     Redirect(routes.Application.index)
   }
 
@@ -41,7 +43,7 @@ object Application extends Controller {
   
   case class Search(
     total: Int = 0,
-    movies: List[Movie] = Nil
+    movies: List[TmdbMovie] = Nil
   )
 
   def newSearch() = Action {
@@ -59,19 +61,19 @@ object Application extends Controller {
 		
 		          implicit val movieReads = (
 		            (__ \ "title").read[String] ~
-		            (__ \ "release_date").read[String] ~
-		            (__ \ "id").read[Int]
-		          )(Movie)
+		            (__ \ "release_date").read[Date] ~
+		            (__ \ "id").read[Long]
+		          )(TmdbMovie)
 		          implicit val searchReads = (
 		            (__ \ "total_results").read[Int] ~
-		            (__ \ "results").read[List[Movie]]
+		            (__ \ "results").read[List[TmdbMovie]]
 		          )(Search)
 		
 		          Logger.debug(response.status + " (GET) " + response.body)
 		          
 		          response.json.validate[Search].fold(
 		            valid = (search =>
-		              Ok(views.html.search(search.movies, searchForm))
+		              Ok(views.html.search(search.movies.map(Movie.createOrUpdate(_)), searchForm))
 		            ),
 		            invalid = (e => BadRequest(e.toString)))
 		      }

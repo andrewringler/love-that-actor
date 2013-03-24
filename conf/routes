@@ -7,7 +7,7 @@ GET     /                      controllers.Application.index
 
 # Favorites
 GET     /likes	               controllers.Application.likes
-POST    /like      			   controllers.Application.newLike(label: String)
+POST    /like      			   controllers.Application.newLike(id: Long)
 POST    /like/:id/delete       controllers.Application.deleteLike(id: Long)
 
 # Search
