@@ -1,0 +1,19 @@
+@(likes: List[Like])
+@import helper._
+
+@main("Likes") {
+    <a href="@routes.Application.index">home</a>
+
+    <h1>@likes.size likes(s)</h1>
+
+    <ul>
+        @likes.map { like =>
+            <li>
+                @like.label
+                @form(routes.Application.deleteLike(like.id)) {
+                    <input type="submit" value="Delete">
+                }
+            </li>
+        }
+    </ul>
+}

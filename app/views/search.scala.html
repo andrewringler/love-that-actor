@@ -1,0 +1,25 @@
+@(movies: List[Movie], searchForm: Form[String])
+@import helper._
+
+@main("Search") {
+    <a href="@routes.Application.index">home</a>
+    <h1>@movies.size movies found(s)</h1>
+
+    <ul>
+        @movies.map { movie =>
+            <li>
+                @movie.title
+                @form(routes.Application.newLike(movie.title)) {
+                    <input type="submit" value="Like">
+                }
+            </li>
+        }
+    </ul>    
+    
+    <h2>Find</h2>
+    @form(routes.Application.search) {
+        @inputText(searchForm("s")) 
+        <input type="submit" value="s">
+    }
+    
+}

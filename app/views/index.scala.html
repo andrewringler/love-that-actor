@@ -1,0 +1,23 @@
+@(likes: List[Like], movies: List[Movie], searchForm: Form[String])
+@import helper._
+
+@main("Likes") {
+    <h1>@likes.size <a href="@routes.Application.likes">likes</a></h1>
+
+    <ul>
+        @likes.map { like =>
+            <li>
+                @like.label
+                @form(routes.Application.deleteLike(like.id)) {
+                    <input type="submit" value="Delete">
+                }
+            </li>
+        }
+    </ul>
+    
+    <h2>Find an Actor or Movie</h2>
+    @form(routes.Application.search) {
+        @inputText(searchForm("s")) 
+        <input type="submit" value="s">
+    }
+}
