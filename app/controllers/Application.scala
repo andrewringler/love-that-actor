@@ -15,6 +15,11 @@ import models.TmdbMovie
 import models.TmdbMovie
 
 object Application extends Controller {
+  def javascriptRoutes = Action { implicit request =>
+    Ok(Routes.javascriptRouter("jsRoutes")(controllers.routes.javascript.Application.searchAutoComplete))
+      .as("text/javascript")
+  }
+
   val searchForm = Form(
     "s" -> nonEmptyText)
 
@@ -52,15 +57,56 @@ object Application extends Controller {
     Ok(views.html.search(Nil, searchForm))
   }
 
+  def moviesToJSonAutocomplete(movies: List[Movie]): JsValue = {
+    val titles = movies.take(5).map { case movie => Json.toJson(movie.title) }
+    Json.toJson(titles)
+  }
+
+  def searchAutoComplete(query: String) = Action {
+        val searchTerm = query.toLowerCase()
+        val cacheKey = "search." + searchTerm
+        val cachedSearch = Cache.getAs[List[TmdbMovie]](cacheKey)
+        if (cachedSearch.isDefined) {
+          Logger.debug("CACHE HIT '" + cacheKey + "'")
+          Ok(moviesToJSonAutocomplete(cachedSearch.get.map(Movie.createOrUpdate(_))))
+        } else {
+          Async {
+            WS.url("http://api.themoviedb.org/3/search/movie")
+              .withQueryString(("query", searchTerm), ("api_key", globals.tmdbApiKey))
+              .get().map { response =>
+
+                implicit val movieReads = (
+                  (__ \ "title").read[String] ~
+                  (__ \ "release_date").read[Date] ~
+                  (__ \ "id").read[Long])(TmdbMovie)
+                implicit val searchReads = (
+                  (__ \ "total_results").read[Int] ~
+                  (__ \ "results").read[List[TmdbMovie]])(Search)
+
+                Logger.debug(response.status + " (GET) " + response.body)
+
+                response.json.validate[Search].fold(
+                  valid = (search =>
+                    Ok(moviesToJSonAutocomplete(tmdbMoviesSetOnCacheAndGet(searchTerm, search.movies).map {
+                      Movie.createOrUpdate(_)
+                    }))),
+                  invalid = (
+                      e=> Ok(Json.arr())
+                  ))
+              }
+          }
+        }
+   }
+
   def search() = Action { implicit request =>
     searchForm.bindFromRequest.fold(
       errors => BadRequest(views.html.search(Nil, errors)),
       s => {
         val searchTerm = s.toLowerCase()
-        val cacheKey = "search."+searchTerm
+        val cacheKey = "search." + searchTerm
         val cachedSearch = Cache.getAs[List[TmdbMovie]](cacheKey)
         if (cachedSearch.isDefined) {
-          Logger.debug("CACHE HIT '"+cacheKey+"'")
+          Logger.debug("CACHE HIT '" + cacheKey + "'")
           Ok(views.html.search(cachedSearch.get.map(Movie.createOrUpdate(_)), searchForm))
         } else {
           Async {
@@ -79,9 +125,9 @@ object Application extends Controller {
                 Logger.debug(response.status + " (GET) " + response.body)
 
                 response.json.validate[Search].fold(
-                  valid = (search => 
+                  valid = (search =>
                     Ok(views.html.search(tmdbMoviesSetOnCacheAndGet(searchTerm, search.movies).map {
-                        Movie.createOrUpdate(_)
+                      Movie.createOrUpdate(_)
                     }, searchForm))),
                   invalid = (e => BadRequest(e.toString)))
               }
@@ -89,9 +135,9 @@ object Application extends Controller {
         }
       })
   }
-  
+
   def tmdbMoviesSetOnCacheAndGet(s: String, tmdbMovies: List[TmdbMovie]) = {
-	  Cache.set("search."+s, tmdbMovies, 60*60)
-	  tmdbMovies
+    Cache.set("search." + s, tmdbMovies, 60 * 60)
+    tmdbMovies
   }
 }

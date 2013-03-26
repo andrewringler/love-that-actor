@@ -13,6 +13,10 @@ POST    /like/:id/delete       controllers.Application.deleteLike(id: Long)
 # Search
 GET		/search				   controllers.Application.newSearch
 POST    /search	               controllers.Application.search
+POST    /autocomplete/:query   controllers.Application.searchAutoComplete(query: String)
+
+# Javascript routing
+GET 	/javascriptRoutes      controllers.Application.javascriptRoutes
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
