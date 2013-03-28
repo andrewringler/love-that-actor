@@ -13,7 +13,7 @@ case class Movie(
 
 case class TmdbMovie(
   title: String,
-  releaseDate: Date,
+  releaseDate: Option[Date],
   tmdbId: Long)
 
 object Movie {
@@ -45,7 +45,7 @@ object Movie {
             'releaseDate -> tmdbMovie.releaseDate,
             'tmdbId -> tmdbMovie.tmdbId).executeUpdate()
 
-        new Movie(id, tmdbMovie.title, tmdbMovie.releaseDate, tmdbMovie.tmdbId)
+        new Movie(id, tmdbMovie.title, tmdbMovie.releaseDate.get, tmdbMovie.tmdbId)
       } else {
         SQL("update movies set title={title} where id={id}").on(
           'title -> tmdbMovie.title,
@@ -53,7 +53,7 @@ object Movie {
         SQL("update movies set releaseDate={releaseDate} where id={id}").on(
           'releaseDate -> tmdbMovie.releaseDate,
           'id -> id.get).executeUpdate()
-        new Movie(id.get, tmdbMovie.title, tmdbMovie.releaseDate, tmdbMovie.tmdbId)
+        new Movie(id.get, tmdbMovie.title, tmdbMovie.releaseDate.get, tmdbMovie.tmdbId)
       }
     }
   }

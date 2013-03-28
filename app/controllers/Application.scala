@@ -63,40 +63,21 @@ object Application extends Controller {
   }
 
   def searchAutoComplete(query: String) = Action {
-        val searchTerm = query.toLowerCase()
-        val cacheKey = "search." + searchTerm
-        val cachedSearch = Cache.getAs[List[TmdbMovie]](cacheKey)
-        if (cachedSearch.isDefined) {
-          Logger.debug("CACHE HIT '" + cacheKey + "'")
-          Ok(moviesToJSonAutocomplete(cachedSearch.get.map(Movie.createOrUpdate(_))))
-        } else {
-          Async {
-            WS.url("http://api.themoviedb.org/3/search/movie")
-              .withQueryString(("query", searchTerm), ("api_key", globals.tmdbApiKey))
-              .get().map { response =>
-
-                implicit val movieReads = (
-                  (__ \ "title").read[String] ~
-                  (__ \ "release_date").read[Date] ~
-                  (__ \ "id").read[Long])(TmdbMovie)
-                implicit val searchReads = (
-                  (__ \ "total_results").read[Int] ~
-                  (__ \ "results").read[List[TmdbMovie]])(Search)
-
-                Logger.debug(response.status + " (GET) " + response.body)
-
-                response.json.validate[Search].fold(
-                  valid = (search =>
-                    Ok(moviesToJSonAutocomplete(tmdbMoviesSetOnCacheAndGet(searchTerm, search.movies).map {
-                      Movie.createOrUpdate(_)
-                    }))),
-                  invalid = (
-                      e=> Ok(Json.arr())
-                  ))
-              }
-          }
-        }
-   }
+    val searchTerm = query.toLowerCase()
+    val cacheKey = "search." + searchTerm
+    val cachedSearch = Cache.getAs[List[Movie]](cacheKey)
+    if (cachedSearch.isDefined) {
+      Logger.debug("CACHE HIT '" + cacheKey + "'")
+      Ok(moviesToJSonAutocomplete(cachedSearch.get))
+    } else {
+      Async {
+        tmdbMovieSearch(searchTerm).map({
+          case Some(movies) => Ok(moviesToJSonAutocomplete(movies))
+          case None => Ok(Json.arr())
+        })
+      }
+    }
+  }
 
   def search() = Action { implicit request =>
     searchForm.bindFromRequest.fold(
@@ -104,40 +85,50 @@ object Application extends Controller {
       s => {
         val searchTerm = s.toLowerCase()
         val cacheKey = "search." + searchTerm
-        val cachedSearch = Cache.getAs[List[TmdbMovie]](cacheKey)
+        val cachedSearch = Cache.getAs[List[Movie]](cacheKey)
         if (cachedSearch.isDefined) {
           Logger.debug("CACHE HIT '" + cacheKey + "'")
-          Ok(views.html.search(cachedSearch.get.map(Movie.createOrUpdate(_)), searchForm))
+          Ok(views.html.search(cachedSearch.get, searchForm))
         } else {
           Async {
-            WS.url("http://api.themoviedb.org/3/search/movie")
-              .withQueryString(("query", searchTerm), ("api_key", globals.tmdbApiKey))
-              .get().map { response =>
-
-                implicit val movieReads = (
-                  (__ \ "title").read[String] ~
-                  (__ \ "release_date").read[Date] ~
-                  (__ \ "id").read[Long])(TmdbMovie)
-                implicit val searchReads = (
-                  (__ \ "total_results").read[Int] ~
-                  (__ \ "results").read[List[TmdbMovie]])(Search)
-
-                Logger.debug(response.status + " (GET) " + response.body)
-
-                response.json.validate[Search].fold(
-                  valid = (search =>
-                    Ok(views.html.search(tmdbMoviesSetOnCacheAndGet(searchTerm, search.movies).map {
-                      Movie.createOrUpdate(_)
-                    }, searchForm))),
-                  invalid = (e => BadRequest(e.toString)))
-              }
+            tmdbMovieSearch(searchTerm).map({
+              case Some(movies) => Ok(views.html.search(movies, searchForm))
+              case None => BadRequest("Issue with TMDB") // TODO handle more robustly
+            })
           }
         }
       })
   }
 
+  def tmdbMovieSearch(s: String): scala.concurrent.Future[Option[List[Movie]]] = {
+    WS.url("http://api.themoviedb.org/3/search/movie")
+      .withQueryString(("query", s), ("api_key", Global.tmdbApiKey))
+      .get().map { response =>
+        implicit val movieReads = (
+          (__ \ "title").read[String] ~
+          (__ \ "release_date").readNullable[Date] ~
+          (__ \ "id").read[Long])(TmdbMovie)
+        implicit val searchReads = (
+          (__ \ "total_results").read[Int] ~
+          (__ \ "results").read[List[TmdbMovie]])(Search)
+
+//        Logger.debug(response.status + " (GET) " + response.body)
+
+        response.json.validate[Search].fold(
+          valid = (search =>
+            Option.apply(tmdbMoviesSetOnCacheAndGet(s, search.movies))),
+          invalid = (e => {
+            Logger.error("Invalid JSON during query '+s+'" + e.toString)
+            Option.empty
+          }))
+      }
+  }
+
   def tmdbMoviesSetOnCacheAndGet(s: String, tmdbMovies: List[TmdbMovie]) = {
-    Cache.set("search." + s, tmdbMovies, 60 * 60)
-    tmdbMovies
+    val movies = tmdbMovies.filter(movie => movie.releaseDate.isDefined).map({
+      Movie.createOrUpdate(_)
+    })
+    Cache.set("search." + s, movies, 60 * 60)
+    movies
   }
 }
