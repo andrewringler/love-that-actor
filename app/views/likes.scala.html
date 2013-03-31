@@ -1,5 +1,6 @@
 @(likes: List[Like])
 @import helper._
+@import views.MovieHelpers._
 
 @main("Likes") {
     <a href="@routes.Application.index">home</a>
@@ -10,6 +11,7 @@
         @likes.map { like =>
             <li>
                 @like.movie.title @like.movie.releaseDate.format("yyyy")
+                <img class="medium" src="@w342(like.movie)" alt="@like.movie.title" />
                 @form(routes.Application.deleteLike(like.id)) {
                     <input type="submit" value="Delete">
                 }

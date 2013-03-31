@@ -1,5 +1,6 @@
 @(likes: List[Like], searchForm: Form[String])
 @import helper._
+@import views.MovieHelpers._
 
 @main("Likes") {
     <h1>@likes.size <a href="@routes.Application.likes">likes</a></h1>
@@ -8,9 +9,9 @@
         @likes.map { like =>
             <li>
                 @like.movie.title @like.movie.tmdbId @like.movie.releaseDate.format("yyyy")
-                <img src="@like.movie.posterPath" alt="@like.movie.title poster" />
+                <img class="medium" src="@w342(like.movie)" alt="@like.movie.title" />
                 @form(routes.Application.deleteLike(like.id)) {
-                    <input type="submit" value="Delete">
+                    <input type="submit" value="Unlike @like.movie.title" />
                 }
             </li>
         }
@@ -19,6 +20,6 @@
     <h2>Find an Actor or Movie</h2>
     @form(routes.Application.search) {
         @inputText(searchForm("s")) 
-        <input type="submit" value="s">
+        <input type="submit" value="Search for an Actor or Movie">
     }
 }
