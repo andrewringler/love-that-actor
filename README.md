@@ -12,3 +12,14 @@ Developers
 	> run
 	
 	visit: http://localhost:9000
+
+Responsive Images
+----------
+For all image assets I am displaying them at half their native resolution. For example, the following image
+with the "medium" class and the following CSS:
+
+	img.medium {
+		max-width: 150px;
+	}
+   
+Should be an asset with a minimum width of 300px. IE a JPG 300x300 or 300x200, etc… I didn't invent this idea, more on this here: [Responsive Images: What We Thought We Needed](http://24ways.org/2012/responsive-images-what-we-thought-we-needed/)
