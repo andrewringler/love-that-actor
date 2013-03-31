@@ -107,12 +107,13 @@ object Application extends Controller {
         implicit val movieReads = (
           (__ \ "title").read[String] ~
           (__ \ "release_date").readNullable[Date] ~
-          (__ \ "id").read[Long])(TmdbMovie)
+          (__ \ "id").read[Long] ~
+          (__ \ "poster_path").readNullable[String])(TmdbMovie)
         implicit val searchReads = (
           (__ \ "total_results").read[Int] ~
           (__ \ "results").read[List[TmdbMovie]])(Search)
 
-//        Logger.debug(response.status + " (GET) " + response.body)
+        //        Logger.debug(response.status + " (GET) " + response.body)
 
         response.json.validate[Search].fold(
           valid = (search =>
@@ -125,7 +126,9 @@ object Application extends Controller {
   }
 
   def tmdbMoviesSetOnCacheAndGet(s: String, tmdbMovies: List[TmdbMovie]) = {
-    val movies = tmdbMovies.filter(movie => movie.releaseDate.isDefined).map({
+    val movies = tmdbMovies.filter(
+        movie => movie.releaseDate.isDefined && movie.posterPath.isDefined
+     ).map({
       Movie.createOrUpdate(_)
     })
     Cache.set("search." + s, movies, 60 * 60)

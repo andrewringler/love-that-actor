@@ -7,7 +7,8 @@
     <ul>
         @likes.map { like =>
             <li>
-                @like.movie.title @like.movie.releaseDate.format("yyyy")
+                @like.movie.title @like.movie.tmdbId @like.movie.releaseDate.format("yyyy")
+                <img src="@like.movie.posterPath" alt="@like.movie.title poster" />
                 @form(routes.Application.deleteLike(like.id)) {
                     <input type="submit" value="Delete">
                 }

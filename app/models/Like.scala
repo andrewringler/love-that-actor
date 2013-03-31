@@ -13,14 +13,15 @@ object Like {
       get[Long]("movieId") ~
       get[String]("title") ~
       get[Date]("releaseDate") ~
-      get[Long]("tmdbId") map {
-        case id ~ movieId ~ title ~ releaseDate ~ tmdbId => Like(id, new Movie(movieId, title, releaseDate, tmdbId))
+      get[Long]("tmdbId") ~
+      get[String]("posterPath") map {
+        case id~movieId~title~releaseDate~tmdbId~posterPath => Like(id, new Movie(movieId, title, releaseDate, tmdbId, posterPath))
       }
   }
 
   def all(): List[Like] = DB.withConnection { implicit c =>
     SQL("""
-        select l.id as id, movieId, m.title, m.releaseDate, m.tmdbId
+        select l.id as id, movieId, m.title, m.releaseDate, m.tmdbId, m.posterPath
         from likes l join movies m on l.movieId = m.id
         order by m.title
         """).as(likeParser *)
