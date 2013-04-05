@@ -23,7 +23,7 @@ object Like {
     SQL("""
         select l.id as id, movieId, m.title, m.releaseDate, m.tmdbId, m.posterPath
         from likes l join movies m on l.movieId = m.id
-        order by m.title
+        order by m.releaseDate desc, m.title asc
         """).as(likeParser *)
   }
 

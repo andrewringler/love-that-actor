@@ -13,7 +13,7 @@
                 @like.movie.title @like.movie.releaseDate.format("yyyy")
                 <img class="medium" src="@w342(like.movie)" alt="@like.movie.title" />
                 @form(routes.Application.deleteLike(like.id)) {
-                    <input type="submit" value="Delete">
+                    <input type="submit" value="Unlike @like.movie.title">
                 }
             </li>
         }

@@ -12,6 +12,16 @@ import models.Movie
 import play.api.Play.current
 
 object MovieHelpers {
+  def moviesFoundMessage(numberOfMoviesFound: Int) :String = {
+    if(numberOfMoviesFound == 0) {
+      "Woah, sorry, no movies found :("
+    } else if (numberOfMoviesFound == 1){
+      "We found 1 movie"
+    } else {
+    	numberOfMoviesFound + " movies found"      
+    }
+  }
+  
   //	"poster_sizes": ["w92", "w154", "w185", "w342", "w500", "original"],
   def w92(movie: Movie) :String = {
     tmdbConfigSlow.baseUrl + "w92" + movie.posterPath

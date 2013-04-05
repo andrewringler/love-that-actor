@@ -7,7 +7,6 @@
  *
  * Designed and built with all the love in the world @twitter by @mdo and @fat.
  */
-
 .clearfix {
   *zoom: 1;
 }
@@ -221,9 +220,21 @@ textarea {
   }
 }
 
+@font-face {
+    font-family: 'BlackoutTwoAm';
+    src: url('/assets/fonts/blackout_two_am-webfont.eot');
+    src: url('/assets/fonts/blackout_two_am-webfont.eot?#iefix') format('embedded-opentype'),
+         url('/assets/fonts/blackout_two_am-webfont.woff') format('woff'),
+         url('/assets/fonts/blackout_two_am-webfont.ttf') format('truetype'),
+         url('/assets/fonts/blackout_two_am-webfont.svg#blackout_two_am') format('svg');
+    font-weight: bold;
+    font-style: normal;
+    
+}
+
 body {
   margin: 0;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: 'Source Sans Pro', "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
   line-height: 20px;
   color: #333333;
@@ -739,7 +750,8 @@ h4,
 h5,
 h6 {
   margin: 10px 0;
-  font-family: inherit;
+/*   font-family: inherit;*/
+  font-family: "BlackoutTwoAm";
   font-weight: bold;
   line-height: 20px;
   color: inherit;

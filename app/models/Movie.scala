@@ -38,7 +38,7 @@ object Movie {
   }
 
   def createOrUpdate(tmdbMovie: TmdbMovie): Movie = {
-    DB.withConnection { implicit c =>
+    DB.withTransaction { implicit c =>
       val id = SQL("select id from movies where tmdbId = {tmdbId}").on(
         'tmdbId -> tmdbMovie.tmdbId).as(scalar[Long].singleOpt)
 

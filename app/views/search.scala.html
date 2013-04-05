@@ -4,15 +4,15 @@
 
 @main("Search") {
     <a href="@routes.Application.index">home</a>
-    <h1>@movies.size movies found(s)</h1>
+    <h1>@moviesFoundMessage(movies.size)</h1>
 
     <ul>
         @movies.map { movie =>
             <li>
-                @movie.title @movie.tmdbId @movie.releaseDate.format("yyyy")
+                @movie.title @movie.releaseDate.format("yyyy")
                 <img class="medium" src="@w342(movie)" alt="@movie.title" />
                 @form(routes.Application.newLike(movie.id)) {
-                    <input type="submit" value="Like">
+                    <input type="submit" value="Like @movie.title">
                 }
             </li>
         }
