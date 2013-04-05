@@ -1,4 +1,4 @@
-Copyright (c) 2013 Andrew Ringler
+Copyright (c) HTML5 Boilerplate
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -17,17 +17,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-
-This software contains the following works:
-
-http://twitter.github.com/bootstrap/ - Apache License, Version 2.0
-http://www.theleagueofmoveabletype.com/blackout - Open Font License
-http://www.google.com/fonts/specimen/Source+Sans+Pro - SIL Open Font License, 1.1
-http://html5boilerplate.com/ - HTML5 Boilerplate License
-
-see legal for full content of applicable licenses.
-
-
-
-

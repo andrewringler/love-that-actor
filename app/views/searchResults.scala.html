@@ -1,0 +1,19 @@
+@(movies: List[Movie], searchForm: Form[String])
+@import helper._
+@import views.MovieHelpers._
+
+@main("Search")(searchForm) {
+	<h2>@moviesFoundMessage(movies.size)</h2>
+	
+	<ul>
+	    @movies.map { movie =>
+	        <li>
+	            @movie.title @movie.releaseDate.format("yyyy")
+	            <img class="medium" src="@w342(movie)" alt="@movie.title" />
+	            @form(routes.Application.newLike(movie.id)) {
+	                <input type="submit" value="Like @movie.title">
+	            }
+	        </li>
+	    }
+	</ul>    
+}

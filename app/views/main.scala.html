@@ -1,4 +1,5 @@
-@(title: String)(content: Html)
+@(title: String)(searchForm: Form[String])(content: Html)
+@import helper._
 
 <!DOCTYPE html>
 
@@ -25,6 +26,20 @@
 	
 </head>
 <body>
+	<nav role="navigation">
+		<ul>
+			<li><a href="@routes.Application.index">Home</a></li>
+			<li><a href="@routes.Application.search">Search</a></li>
+			<li><a href="@routes.Application.likes">Likes</a></li>
+			<li>
+				@form(routes.Application.search) {
+	        		@inputText(searchForm("s")) 
+	        		<input type="submit" value="s" name="submit" alt="Submit">
+	    		}
+			</li>
+		</ul>
+	</nav>
+
 	@content
 
 	<script>

@@ -1,8 +1,8 @@
-@(likes: List[Like])
+@(likes: List[Like], searchForm: Form[String])
 @import helper._
 @import views.MovieHelpers._
 
-@main("Likes") {
+@main("Likes")(searchForm) {
     <a href="@routes.Application.index">home</a>
 
     <h1>@likes.size likes(s)</h1>

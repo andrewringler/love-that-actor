@@ -29,7 +29,7 @@ object Application extends Controller {
 
   // Likes
   def likes = Action {
-    Ok(views.html.likes(Like.all()))
+    Ok(views.html.likes(Like.all(), searchForm))
   }
 
   def newLike(movieId: Long) = Action {
@@ -54,7 +54,7 @@ object Application extends Controller {
     movies: List[TmdbMovie] = Nil)
 
   def newSearch() = Action {
-    Ok(views.html.search(Nil, searchForm))
+    Ok(views.html.search(searchForm))
   }
 
   def moviesToJSonAutocomplete(movies: List[Movie]): JsValue = {
@@ -81,18 +81,18 @@ object Application extends Controller {
 
   def search() = Action { implicit request =>
     searchForm.bindFromRequest.fold(
-      errors => BadRequest(views.html.search(Nil, errors)),
+      errors => BadRequest(views.html.searchResults(Nil, errors)),
       s => {
         val searchTerm = s.toLowerCase()
         val cacheKey = "search." + searchTerm
         val cachedSearch = Cache.getAs[List[Movie]](cacheKey)
         if (cachedSearch.isDefined) {
           Logger.debug("CACHE HIT '" + cacheKey + "'")
-          Ok(views.html.search(cachedSearch.get, searchForm))
+          Ok(views.html.searchResults(cachedSearch.get, searchForm))
         } else {
           Async {
             tmdbMovieSearch(searchTerm).map({
-              case Some(movies) => Ok(views.html.search(movies, searchForm))
+              case Some(movies) => Ok(views.html.searchResults(movies, searchForm))
               case None => BadRequest("Issue with TMDB") // TODO handle more robustly
             })
           }

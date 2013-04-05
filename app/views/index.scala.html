@@ -2,7 +2,7 @@
 @import helper._
 @import views.MovieHelpers._
 
-@main("Likes") {
+@main("Likes")(searchForm) {
     <h1>@likes.size <a href="@routes.Application.likes">likes</a></h1>
 
     <ul>
@@ -16,10 +16,4 @@
             </li>
         }
     </ul>
-    
-    <h2>Find an Actor or Movie</h2>
-    @form(routes.Application.search) {
-        @inputText(searchForm("s")) 
-        <input type="submit" value="Search for an Actor or Movie">
-    }
 }
