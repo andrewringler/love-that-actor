@@ -7,13 +7,16 @@
 
     <ul class="movie-list">
         @likes.map { like =>
-            <li class="movie-list-item">
+            <li class="movie-list-item clearfix">
                 <img class="medium movie-list-item-img" src="@w342(like.movie)" alt="@like.movie.title" />
-                <b class="movie-list-item-title">@like.movie.title</b>
-                <b class="movie-list-item-releasedate">@like.movie.releaseDate.format("yyyy")</b>
-                <b class="movie-list-item-like">@form(routes.Application.deleteLike(like.id)) {
-                    <input type="submit" value="Unlike @like.movie.title" />
-                }</b>
+                <p class="movie-list-item-description">
+	                <span class="movie-list-item-title">@like.movie.title</span>
+	                <span class="movie-list-item-releasedate">@like.movie.releaseDate.format("yyyy")</span>
+	                <span class="movie-list-item-like">@form(routes.Application.deleteLike(like.id)) {
+	                    <input type="submit" value="Unlike @like.movie.title" />
+	                    
+	                }</span>
+                </p>
             </li>
         }
     </ul>

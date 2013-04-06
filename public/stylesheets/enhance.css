@@ -3,34 +3,34 @@
 img.medium {
 	width: 125px;
 }
-ul {
-	list-style-type: none;
-}
+
+/*
+	Movie List
+	slats: http://pea.rs/content/slats-html5
+*/
 .movie-list {
-	
+	line-height: 1;
 }
 .movie-list-item {
-	position: relative;
-	height: 250px;
+	margin-bottom: 1em;
 }
 .movie-list-item-img {
-	position: absolute;
-	left: 0;
+	float: left;
+	display: block;
+	margin-right: 1em;
+}
+.movie-list-item-description {
+	padding: 0;
+	margin: 0;
 }
 .movie-list-item-title {
-	font-size: 2em;
-	line-height: 1;
-	margin-left: 150px;
-	display: block;
+	font-size: 1.3em;
 }
 .movie-list-item-releasedate {
-	font-size: 4em;
-	line-height: 1;
-	margin-left: 150px;
+	font-size: 2em;
+	display: block;
 }
 .movie-list-item-like {
-	display: block;
-	margin-left: 150px;
 }
 	
 }
