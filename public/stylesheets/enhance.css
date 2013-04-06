@@ -1,0 +1,36 @@
+@media (min-width: 0px) {
+	
+img.medium {
+	width: 125px;
+}
+ul {
+	list-style-type: none;
+}
+.movie-list {
+	
+}
+.movie-list-item {
+	position: relative;
+	height: 250px;
+}
+.movie-list-item-img {
+	position: absolute;
+	left: 0;
+}
+.movie-list-item-title {
+	font-size: 2em;
+	line-height: 1;
+	margin-left: 150px;
+	display: block;
+}
+.movie-list-item-releasedate {
+	font-size: 4em;
+	line-height: 1;
+	margin-left: 150px;
+}
+.movie-list-item-like {
+	display: block;
+	margin-left: 150px;
+}
+	
+}
