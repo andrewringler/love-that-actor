@@ -21,7 +21,7 @@ object Application extends Controller {
   }
 
   val searchForm = Form(
-    "s" -> nonEmptyText)
+    "q" -> nonEmptyText)
 
   def index = Action {
     Ok(views.html.index(Like.all(), searchForm))
