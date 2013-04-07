@@ -8,10 +8,10 @@
 	<ul>
 	    @movies.map { movie =>
 	        <li>
-	            @movie.title @movie.releaseDate.format("yyyy")
-	            <img class="medium" src="@w342(movie)" alt="@movie.title" />
+	            <a href="@routes.Application.movie(movie.id)">@movie.title</a> @movie.releaseDate.format("yyyy")
+	            <a href="@routes.Application.movie(movie.id)"><img class="medium" src="@w342(movie)" alt="@movie.title" /></a>
 	            @form(routes.Application.newLike(movie.id)) {
-	                <input type="submit" value="Like @movie.title">
+	                <input type="submit" value="Like">
 	            }
 	        </li>
 	    }

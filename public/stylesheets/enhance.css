@@ -3,6 +3,9 @@
 img.medium {
 	width: 125px;
 }
+img.large {
+	width: 250px;
+}
 
 /*
 	Movie List

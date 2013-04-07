@@ -15,6 +15,9 @@ GET		/search				   controllers.Application.newSearch
 POST    /search	               controllers.Application.search
 POST    /autocomplete/:query   controllers.Application.searchAutoComplete(query: String)
 
+# Movies
+GET		/movie/:id			   controllers.Application.movie(id: Long)
+
 # Javascript routing
 GET 	/javascriptRoutes      controllers.Application.javascriptRoutes
 

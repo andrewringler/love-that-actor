@@ -42,6 +42,11 @@ object Application extends Controller {
     Redirect(routes.Application.index)
   }
 
+  // Movies
+  def movie(id: Long) = Action {
+    Ok(views.html.movie(Movie.getMovie(id), searchForm))
+  }
+  
   // Search
   import play.api.libs.json._
   import play.api.data.validation.ValidationError

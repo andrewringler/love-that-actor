@@ -37,6 +37,14 @@ object Movie {
       }
   }
 
+  def getMovie(id: Long): Movie = DB.withConnection { implicit c =>
+    SQL("""
+        select m.id as id, m.title, m.releaseDate, m.tmdbId, m.posterPath
+        from movies m where id = {id}
+        """).on('id -> id)
+        .as(movieParser.single)
+  }
+  
   def createOrUpdate(tmdbMovie: TmdbMovie): Movie = {
     DB.withTransaction { implicit c =>
       val id = SQL("select id from movies where tmdbId = {tmdbId}").on(

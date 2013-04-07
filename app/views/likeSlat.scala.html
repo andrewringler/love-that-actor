@@ -3,9 +3,9 @@
 @import views.MovieHelpers._
 
 <li class="movie-list-item clearfix">
-    <img class="medium movie-list-item-img" src="@w342(like.movie)" alt="@like.movie.title" />
+    <a href="@routes.Application.movie(like.movie.id)"><img class="medium movie-list-item-img" src="@w342(like.movie)" alt="@like.movie.title" /></a>
     <p class="movie-list-item-description">
-     <span class="movie-list-item-title">@like.movie.title</span>
+     <span class="movie-list-item-title"><a href="@routes.Application.movie(like.movie.id)">@like.movie.title</a></span>
      <span class="movie-list-item-releasedate">@like.movie.releaseDate.format("yyyy")</span>
      <span class="movie-list-item-like">@form(routes.Application.deleteLike(like.id)) {
          <input type="submit" value="Unlike" />
