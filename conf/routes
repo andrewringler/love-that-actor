@@ -24,5 +24,15 @@ GET     /assets/img/glyphicons-halflings-white.png      controllers.Assets.at(pa
 GET     /assets/img/glyphicons-halflings.png            controllers.Assets.at(path="/public", file="/images/glyphicons-halflings.png")
 
 # Map static resources from the /public/root folder to the / URL path
+GET		/crossdomain.xml  			controllers.Assets.at(path="/public", file="/root/crossdomain.xml")
+GET		/humans.txt  			controllers.Assets.at(path="/public", file="/root/humans.txt")
+GET		/robots.txt  			controllers.Assets.at(path="/public", file="/root/robots.txt")
+
 GET		/favicon.ico  			controllers.Assets.at(path="/public", file="/root/favicon.ico")
+GET		/apple-touch-icon-114x114-precomposed.png  			controllers.Assets.at(path="/public", file="/root/apple-touch-icon-114x114-precomposed.png")
+GET		/apple-touch-icon-144x144-precomposed.png  			controllers.Assets.at(path="/public", file="/root/apple-touch-icon-144x144-precomposed.png")
+GET		/apple-touch-icon-72x72-precomposed.png  			controllers.Assets.at(path="/public", file="/root/apple-touch-icon-72x72-precomposed.png")
+GET		/apple-touch-icon-57x57-precomposed.png  			controllers.Assets.at(path="/public", file="/root/apple-touch-icon-57x57-precomposed.png")
+GET		/apple-touch-icon-precomposed.png  			controllers.Assets.at(path="/public", file="/root/apple-touch-icon-precomposed.png")
+GET		/apple-touch-icon.png  			controllers.Assets.at(path="/public", file="/root/apple-touch-icon.png")
 
