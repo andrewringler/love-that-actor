@@ -1,22 +1,12 @@
 @(likes: List[Like], searchForm: Form[String])
 @import helper._
-@import views.MovieHelpers._
 
 @main("Home")(searchForm) {
     <h1>@likes.size <a href="@routes.Application.likes">likes</a></h1>
 
     <ul class="movie-list">
         @likes.map { like =>
-            <li class="movie-list-item clearfix">
-                <img class="medium movie-list-item-img" src="@w342(like.movie)" alt="@like.movie.title" />
-                <p class="movie-list-item-description">
-	                <span class="movie-list-item-title">@like.movie.title</span>
-	                <span class="movie-list-item-releasedate">@like.movie.releaseDate.format("yyyy")</span>
-	                <span class="movie-list-item-like">@form(routes.Application.deleteLike(like.id)) {
-	                    <input type="submit" value="Unlike" />
-	                }</span>
-                </p>
-            </li>
+        	@likeSlat(like)
         }
     </ul>
 }
