@@ -5,8 +5,8 @@
 @main(movie.title)(searchForm) {
     <h1>@movie.title</h1>
 
-    <a href="@routes.Application.movie(movie.id)">@movie.title</a> @movie.releaseDate.format("yyyy")
-    <a href="@routes.Application.movie(movie.id)"><img class="large" src="@w500(movie)" alt="@movie.title" /></a>
+    @movie.title @movie.releaseDate.format("yyyy")
+    <img class="large" src="@w500(movie)" alt="@movie.title" />
     @form(routes.Application.newLike(movie.id)) {
         <input type="submit" value="Like">
     }
