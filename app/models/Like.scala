@@ -15,7 +15,7 @@ object Like {
       get[Date]("releaseDate") ~
       get[Long]("tmdbId") ~
       get[String]("posterPath") map {
-        case id~movieId~title~releaseDate~tmdbId~posterPath => Like(id, new Movie(movieId, title, releaseDate, tmdbId, posterPath))
+        case id ~ movieId ~ title ~ releaseDate ~ tmdbId ~ posterPath => Like(id, new Movie(movieId, title, releaseDate, tmdbId, posterPath))
       }
   }
 
@@ -28,9 +28,14 @@ object Like {
   }
 
   def create(movieId: Long) {
-    DB.withConnection { implicit c =>
-      SQL("insert into likes (movieId) values ({movieId})").on(
-        'movieId -> movieId).executeUpdate()
+    DB.withTransaction { implicit c =>
+      val id = SQL("select id from likes where id = {id}").on(
+        'id -> movieId).as(scalar[Long].singleOpt)
+
+      if (id.isEmpty) {
+        SQL("insert into likes (movieId) values ({movieId})").on(
+          'movieId -> movieId).executeUpdate()
+      }
     }
   }
 

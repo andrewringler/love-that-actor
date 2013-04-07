@@ -13,8 +13,7 @@
 	                <span class="movie-list-item-title">@like.movie.title</span>
 	                <span class="movie-list-item-releasedate">@like.movie.releaseDate.format("yyyy")</span>
 	                <span class="movie-list-item-like">@form(routes.Application.deleteLike(like.id)) {
-	                    <input type="submit" value="Unlike @like.movie.title" />
-	                    
+	                    <input type="submit" value="Unlike" />
 	                }</span>
                 </p>
             </li>
