@@ -5,7 +5,6 @@ import models.Movie
 import play.api.Logger
 import play.api.Play.current
 import play.api.Routes
-import play.api.cache.Cache
 import play.api.data.Form
 import play.api.data.Forms.nonEmptyText
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -58,18 +57,10 @@ object Application extends Controller {
     Json.toJson(titles)
   }
 
-  def searchAutoComplete(query: String) = Action {
-    val searchTerm = query.toLowerCase()
-    val cacheKey = "search." + searchTerm
-    val cachedSearch = Cache.getAs[List[Movie]](cacheKey)
-    if (cachedSearch.isDefined) {
-      Logger.debug("CACHE HIT '" + cacheKey + "'")
-      Ok(moviesToJSonAutocomplete(cachedSearch.get))
-    } else {
-      Async {
-        TmdbService.tmdbMovieSearch(searchTerm).map{
-          case movies => Ok(moviesToJSonAutocomplete(movies))
-        }
+  def searchAutoComplete(s: String) = Action {
+    Async {
+      TmdbService.tmdbMovieSearch(s).map {
+        case movies => Ok(moviesToJSonAutocomplete(movies))
       }
     }
   }
@@ -78,17 +69,9 @@ object Application extends Controller {
     searchForm.bindFromRequest.fold(
       errors => BadRequest(views.html.searchResults(Nil, errors)),
       s => {
-        val searchTerm = s.toLowerCase()
-        val cacheKey = "search." + searchTerm
-        val cachedSearch = Cache.getAs[List[Movie]](cacheKey)
-        if (cachedSearch.isDefined) {
-          Logger.debug("CACHE HIT '" + cacheKey + "'")
-          Ok(views.html.searchResults(cachedSearch.get, searchForm))
-        } else {
-          Async {
-            TmdbService.tmdbMovieSearch(searchTerm).map {
-              case movies => Ok(views.html.searchResults(movies, searchForm))
-            }
+        Async {
+          TmdbService.tmdbMovieSearch(s).map {
+            case movies => Ok(views.html.searchResults(movies, searchForm))
           }
         }
       })

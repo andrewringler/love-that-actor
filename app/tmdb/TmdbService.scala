@@ -20,11 +20,15 @@ import scala.concurrent._
 import ExecutionContext.Implicits.global
 
 object TmdbService {
-  case class Search(
+  def tmdbMovieSearch(s: String): scala.concurrent.Future[List[Movie]] = {
+    ensureOneTmdbRequestPerSearchTerm.get(s.toLowerCase())
+  }
+
+  private case class Search(
     total: Int = 0,
     movies: List[TmdbMovie] = Nil)
 
-  val ensureOneTmdbRequestPerSearchTerm =
+  private val ensureOneTmdbRequestPerSearchTerm =
     CacheBuilder.newBuilder()
       .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)
       .build(new CacheLoader[String, scala.concurrent.Future[List[Movie]]]() {
@@ -32,13 +36,12 @@ object TmdbService {
           tmdbMovieSearchWebServiceCall(searchQuery)
         }
       })
-  def tmdbMovieSearch(s: String): scala.concurrent.Future[List[Movie]] = {
-    ensureOneTmdbRequestPerSearchTerm.get(s)
-  }
 
-  def tmdbMovieSearchWebServiceCall(s: String): scala.concurrent.Future[List[Movie]] = {
-    val cachedSearch = Cache.getAs[Search]("search." + s)
+  private def tmdbMovieSearchWebServiceCall(s: String): scala.concurrent.Future[List[Movie]] = {
+    val cacheKey = "search." + s
+    val cachedSearch = Cache.getAs[Search](cacheKey)
     if (cachedSearch.isDefined) {
+      Logger.debug("CACHE HIT '" + cacheKey + "'")
       future { toMovies(s, cachedSearch.get.movies) }
     } else {
       WS.url("http://api.themoviedb.org/3/search/movie")
@@ -62,7 +65,7 @@ object TmdbService {
 
           response.json.validate[Search].fold(
             valid = (search => {
-              Cache.set("search." + s, search, 60 * 60)
+              Cache.set(cacheKey, search, 60 * 60)
               toMovies(s, search.movies)
             }),
             invalid = (e => {
@@ -74,7 +77,7 @@ object TmdbService {
     }
   }
 
-  def toMovies(s: String, tmdbMovies: List[TmdbMovie]) = {
+  private def toMovies(s: String, tmdbMovies: List[TmdbMovie]) = {
     tmdbMovies.filter(
       movie => movie.releaseDate.isDefined && movie.posterPath.isDefined).map({
         Movie.createOrUpdate(_)
