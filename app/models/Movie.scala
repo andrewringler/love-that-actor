@@ -58,12 +58,10 @@ object Movie {
     new Movie(partialMovie.id, partialMovie.title, partialMovie.releaseDate, partialMovie.tmdbId, partialMovie.posterPath, cast)
   }
 
-  //ensureOneTmdbRequestPerSearchTerm
-  
   case class TmdbMovieEqualityByTmdbId(tmdbId: Long)(val tmdbMovie: TmdbMovie)
   val ensureOneMovieUpdatePerTmdbId =
     CacheBuilder.newBuilder()
-      .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)
+      .expireAfterAccess(5, java.util.concurrent.TimeUnit.SECONDS)
       .build(new CacheLoader[TmdbMovieEqualityByTmdbId, Movie]() {
         override def load(tmdbMovieEqualityByTmdbId: TmdbMovieEqualityByTmdbId): Movie = {
           createOrUpdateInt(tmdbMovieEqualityByTmdbId.tmdbMovie)
