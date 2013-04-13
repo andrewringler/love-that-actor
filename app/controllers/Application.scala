@@ -1,27 +1,21 @@
 package controllers
 
-import play.api._
-import play.api.mvc._
-import play.api.data._
-import play.api.data.Forms._
 import models.Like
 import models.Movie
 import play.api.Logger
-import models.TmdbMovie
-import java.util.Date
 import play.api.Play.current
+import play.api.Routes
 import play.api.cache.Cache
-import models.TmdbMovie
-import models.TmdbMovie
-import models.TmdbCast
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.google.common.cache.LoadingCache
-import scala.util.parsing.json.JSONObject
-import scala.util.parsing.json.JSONObject
+import play.api.data.Form
+import play.api.data.Forms.nonEmptyText
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json
+import play.api.mvc.Action
+import play.api.mvc.Controller
+import tmdb.TmdbService
 
 object Application extends Controller {
-
   def javascriptRoutes = Action { implicit request =>
     Ok(Routes.javascriptRouter("jsRoutes")(controllers.routes.javascript.Application.searchAutoComplete))
       .as("text/javascript")
@@ -55,16 +49,6 @@ object Application extends Controller {
   }
 
   // Search
-  import play.api.libs.json._
-  import play.api.data.validation.ValidationError
-  import play.api.libs.ws.WS
-  import play.api.libs.concurrent.Execution.Implicits._
-  import play.api.libs.functional.syntax._
-
-  case class Search(
-    total: Int = 0,
-    movies: List[TmdbMovie] = Nil)
-
   def newSearch() = Action {
     Ok(views.html.search(searchForm))
   }
@@ -83,7 +67,7 @@ object Application extends Controller {
       Ok(moviesToJSonAutocomplete(cachedSearch.get))
     } else {
       Async {
-        tmdbMovieSearch(searchTerm).map({
+        TmdbService.tmdbMovieSearch(searchTerm).map({
           case Some(movies) => Ok(moviesToJSonAutocomplete(movies))
           case None => Ok(Json.arr())
         })
@@ -103,65 +87,12 @@ object Application extends Controller {
           Ok(views.html.searchResults(cachedSearch.get, searchForm))
         } else {
           Async {
-            tmdbMovieSearch(searchTerm).map({
+            TmdbService.tmdbMovieSearch(searchTerm).map({
               case Some(movies) => Ok(views.html.searchResults(movies, searchForm))
               case None => BadRequest("Issue with TMDB") // TODO handle more robustly
             })
           }
         }
       })
-  }
-
-  val ensureSingleTmdbCallPerRequest =
-    CacheBuilder.newBuilder()
-      .build(new CacheLoader[String, scala.concurrent.Future[Option[List[Movie]]]]() {
-        override def load(searchQuery: String): scala.concurrent.Future[Option[List[Movie]]] = {
-          tmdbMovieSearchWebServiceCall(searchQuery)
-        }
-      })
-  def tmdbMovieSearch(s: String): scala.concurrent.Future[Option[List[Movie]]] = {
-    ensureSingleTmdbCallPerRequest.get(s)
-  }
-
-  def tmdbMovieSearchWebServiceCall(s: String): scala.concurrent.Future[Option[List[Movie]]] = {
-    WS.url("http://api.themoviedb.org/3/search/movie")
-      .withQueryString(("query", s), ("api_key", Global.tmdbApiKey))
-      .get().map { response =>
-        implicit val castReads = (
-          (__ \ "id").read[Long] ~
-          (__ \ "name").read[String] ~
-          (__ \ "character").readNullable[String] ~
-          (__ \ "order").read[Int] ~
-          (__ \ "profile_path").readNullable[String])(TmdbCast)
-        implicit val movieReads = (
-          (__ \ "title").read[String] ~
-          (__ \ "release_date").readNullable[Date] ~
-          (__ \ "id").read[Long] ~
-          (__ \ "poster_path").readNullable[String] ~
-          (__ \ "casts" \ "cast").readNullable[List[TmdbCast]].orElse((__ \ "casts").readNullable[List[TmdbCast]]))(TmdbMovie)
-        implicit val searchReads = (
-          (__ \ "total_results").read[Int] ~
-          (__ \ "results").read[List[TmdbMovie]])(Search)
-
-        response.json.validate[Search].fold(
-          valid = (search =>
-            Option.apply(tmdbMoviesSetOnCacheAndGet(s, search.movies))),
-          invalid = (e => {
-            Logger.debug(response.status + " (GET) " + response.body)
-            Logger.error("Invalid JSON during query '+s+'" + e.toString)
-            Option.empty
-          }))
-      }
-  }
-
-  def tmdbMoviesSetOnCacheAndGet(s: String, tmdbMovies: List[TmdbMovie]) = {
-    val movies = tmdbMovies.filter(
-      movie => movie.releaseDate.isDefined && movie.posterPath.isDefined).map({
-        val theMovie = Movie.createOrUpdate(_)
-        ensureSingleTmdbCallPerRequest.invalidate(s)
-        theMovie
-      })
-    Cache.set("search." + s, movies, 60 * 60)
-    movies
   }
 }

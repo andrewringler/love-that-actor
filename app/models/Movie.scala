@@ -58,8 +58,10 @@ object Movie {
     new Movie(partialMovie.id, partialMovie.title, partialMovie.releaseDate, partialMovie.tmdbId, partialMovie.posterPath, cast)
   }
 
+  //ensureOneTmdbRequestPerSearchTerm
+  
   case class TmdbMovieEqualityByTmdbId(tmdbId: Long)(val tmdbMovie: TmdbMovie)
-  val ensureOnlyOneMovieUpdatePerTmdbIdConcurrently =
+  val ensureOneMovieUpdatePerTmdbId =
     CacheBuilder.newBuilder()
       .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)
       .build(new CacheLoader[TmdbMovieEqualityByTmdbId, Movie]() {
@@ -68,7 +70,7 @@ object Movie {
         }
       })
   def createOrUpdate(tmdbMovie: TmdbMovie): Movie = {
-    ensureOnlyOneMovieUpdatePerTmdbIdConcurrently.get(TmdbMovieEqualityByTmdbId(tmdbMovie.tmdbId)(tmdbMovie))
+    ensureOneMovieUpdatePerTmdbId.get(TmdbMovieEqualityByTmdbId(tmdbMovie.tmdbId)(tmdbMovie))
   }
   def createOrUpdateInt(tmdbMovie: TmdbMovie): Movie = {
     DB.withTransaction { implicit c =>
