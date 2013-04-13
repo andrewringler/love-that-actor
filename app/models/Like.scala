@@ -15,16 +15,27 @@ object Like {
       get[Date]("releaseDate") ~
       get[Long]("tmdbId") ~
       get[String]("posterPath") map {
-        case id ~ movieId ~ title ~ releaseDate ~ tmdbId ~ posterPath => Like(id, new Movie(movieId, title, releaseDate, tmdbId, posterPath))
+        case id ~ movieId ~ title ~ releaseDate ~ tmdbId ~ posterPath => Like(id, new Movie(movieId, title, releaseDate, tmdbId, posterPath, Nil))
       }
   }
 
   def all(): List[Like] = DB.withConnection { implicit c =>
-    SQL("""
+    val likes = SQL("""
         select l.id as id, movieId, m.title, m.releaseDate, m.tmdbId, m.posterPath
         from likes l join movies m on l.movieId = m.id
         order by m.releaseDate desc, m.title asc
         """).as(likeParser *)
+
+    likes.map {
+      case like =>
+        val cast = SQL("""
+    			select c.id as castId, c.character, a.id as actorId, a.name, a.tmdbId, a.profilePath
+    			from cast c join actor a on c.actorId = a.id
+    			where c.movieId = {movidId}
+    			""").on('movieId -> like.movie.id)
+          .as(Cast.castParser *)
+        new Like(like.id, new Movie(like.movie.id, like.movie.title, like.movie.releaseDate, like.movie.tmdbId, like.movie.posterPath, cast))
+    }
   }
 
   def create(movieId: Long) {

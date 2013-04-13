@@ -13,6 +13,7 @@ import play.api.Play.current
 import play.api.cache.Cache
 import models.TmdbMovie
 import models.TmdbMovie
+import models.TmdbCast
 
 object Application extends Controller {
   def javascriptRoutes = Action { implicit request =>
@@ -109,21 +110,27 @@ object Application extends Controller {
     WS.url("http://api.themoviedb.org/3/search/movie")
       .withQueryString(("query", s), ("api_key", Global.tmdbApiKey))
       .get().map { response =>
+        implicit val castReads = (
+          (__ \ "id").read[Long] ~
+          (__ \ "name").read[String] ~
+          (__ \ "character").readNullable[String] ~
+          (__ \ "order").read[Int] ~
+          (__ \ "profile_path").readNullable[String])(TmdbCast)
         implicit val movieReads = (
           (__ \ "title").read[String] ~
           (__ \ "release_date").readNullable[Date] ~
           (__ \ "id").read[Long] ~
-          (__ \ "poster_path").readNullable[String])(TmdbMovie)
+          (__ \ "poster_path").readNullable[String] ~
+          (__ \ "casts" \ "cast").read[List[TmdbCast]])(TmdbMovie)
         implicit val searchReads = (
           (__ \ "total_results").read[Int] ~
           (__ \ "results").read[List[TmdbMovie]])(Search)
-
-        //        Logger.debug(response.status + " (GET) " + response.body)
 
         response.json.validate[Search].fold(
           valid = (search =>
             Option.apply(tmdbMoviesSetOnCacheAndGet(s, search.movies))),
           invalid = (e => {
+        	Logger.debug(response.status + " (GET) " + response.body)
             Logger.error("Invalid JSON during query '+s+'" + e.toString)
             Option.empty
           }))
