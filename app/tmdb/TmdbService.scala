@@ -20,6 +20,8 @@ import scala.concurrent._
 import ExecutionContext.Implicits.global
 
 object TmdbService {
+  val tmdbSearchCacheTimeInSeconds = 60 * 60 //1-hour
+              
   def tmdbMovieSearch(s: String): scala.concurrent.Future[List[Movie]] = {
     ensureOneTmdbRequestPerSearchTerm.get(s.toLowerCase())
   }
@@ -65,7 +67,7 @@ object TmdbService {
 
           response.json.validate[Search].fold(
             valid = (search => {
-              Cache.set(cacheKey, search, 60 * 60)
+              Cache.set(cacheKey, search, tmdbSearchCacheTimeInSeconds)
               toMovies(s, search.movies)
             }),
             invalid = (e => {
