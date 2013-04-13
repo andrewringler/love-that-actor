@@ -67,10 +67,9 @@ object Application extends Controller {
       Ok(moviesToJSonAutocomplete(cachedSearch.get))
     } else {
       Async {
-        TmdbService.tmdbMovieSearch(searchTerm).map({
-          case Some(movies) => Ok(moviesToJSonAutocomplete(movies))
-          case None => Ok(Json.arr())
-        })
+        TmdbService.tmdbMovieSearch(searchTerm).map{
+          case movies => Ok(moviesToJSonAutocomplete(movies))
+        }
       }
     }
   }
@@ -87,10 +86,9 @@ object Application extends Controller {
           Ok(views.html.searchResults(cachedSearch.get, searchForm))
         } else {
           Async {
-            TmdbService.tmdbMovieSearch(searchTerm).map({
-              case Some(movies) => Ok(views.html.searchResults(movies, searchForm))
-              case None => BadRequest("Issue with TMDB") // TODO handle more robustly
-            })
+            TmdbService.tmdbMovieSearch(searchTerm).map {
+              case movies => Ok(views.html.searchResults(movies, searchForm))
+            }
           }
         }
       })
