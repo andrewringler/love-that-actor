@@ -30,7 +30,7 @@ object TmdbService {
 
   private val ensureOneTmdbRequestPerSearchTerm =
     CacheBuilder.newBuilder()
-      .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)
+      .expireAfterAccess(5, java.util.concurrent.TimeUnit.SECONDS)
       .build(new CacheLoader[String, scala.concurrent.Future[List[Movie]]]() {
         override def load(searchQuery: String): scala.concurrent.Future[List[Movie]] = {
           tmdbMovieSearchWebServiceCall(searchQuery)
