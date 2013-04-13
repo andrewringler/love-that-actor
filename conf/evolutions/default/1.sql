@@ -6,7 +6,7 @@ CREATE SEQUENCE actors_id_seq;
 CREATE TABLE actors (
 	id bigint NOT NULL DEFAULT nextval('actors_id_seq') PRIMARY KEY,
 	name varchar(255) NOT NULL,
-	tmdbId bigint NOT NULL,
+	tmdbId bigint NOT NULL UNIQUE,
 	profilePath varchar(255) NOT NULL
 );
 
@@ -25,7 +25,7 @@ CREATE TABLE movies (
     id bigint NOT NULL DEFAULT nextval('movies_id_seq') PRIMARY KEY,
     title varchar(255) NOT NULL,
     releaseDate timestamp NOT NULL,
-    tmdbId bigint NOT NULL,
+    tmdbId bigint NOT NULL UNIQUE,
     posterPath varchar(255) NOT NULL
 );
 

@@ -30,8 +30,8 @@ object Like {
       case like =>
         val cast = SQL("""
     			select c.id as castId, c.character, a.id as actorId, a.name, a.tmdbId, a.profilePath
-    			from cast c join actor a on c.actorId = a.id
-    			where c.movieId = {movidId}
+    			from cast c join actors a on c.actorId = a.id
+    			where c.movieId = {movieId}
     			""").on('movieId -> like.movie.id)
           .as(Cast.castParser *)
         new Like(like.id, new Movie(like.movie.id, like.movie.title, like.movie.releaseDate, like.movie.tmdbId, like.movie.posterPath, cast))

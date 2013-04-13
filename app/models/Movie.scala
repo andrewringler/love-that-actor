@@ -5,13 +5,15 @@ import play.api.db._
 import play.api.Play.current
 import java.util.Date
 import play.api.cache.Cache
-  import play.api.libs.ws.WS
-  import play.api.libs.json._
-  import play.api.data.validation.ValidationError
-  import play.api.libs.ws.WS
-  import play.api.libs.concurrent.Execution.Implicits._
-  import play.api.libs.functional.syntax._
+import play.api.libs.ws.WS
+import play.api.libs.json._
+import play.api.data.validation.ValidationError
+import play.api.libs.ws.WS
+import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.functional.syntax._
 import play.api.Logger
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 
 case class Movie(
   id: Long,
@@ -26,7 +28,7 @@ case class TmdbMovie(
   releaseDate: Option[Date],
   tmdbId: Long,
   posterPath: Option[String],
-  cast: List[TmdbCast])
+  cast: Option[List[TmdbCast]])
 
 object Movie {
   val movieParser = {
@@ -38,25 +40,37 @@ object Movie {
         case id ~ title ~ releaseDate ~ tmdbId ~ posterPath => Movie(id, title, releaseDate, tmdbId, posterPath, Nil)
       }
   }
-  
+
   def getMovie(id: Long): Movie = DB.withConnection { implicit c =>
     val partialMovie = SQL("""
         select m.id as id, m.title, m.releaseDate, m.tmdbId, m.posterPath
         from movies m where id = {id}
         """).on('id -> id)
-        .as(movieParser.single)
-        
-     val cast = SQL("""
+      .as(movieParser.single)
+
+    val cast = SQL("""
          select c.id as castId, c.character, a.id as actorId, a.name, a.tmdbId, a.profilePath
-         from cast c join actor a on c.actorId = a.id
-         where c.movieId = {movidId}
+         from cast c join actors a on c.actorId = a.id
+         where c.movieId = {movieId}
          """).on('movieId -> id)
-         .as(Cast.castParser *)
-        
-     new Movie(partialMovie.id, partialMovie.title, partialMovie.releaseDate, partialMovie.tmdbId, partialMovie.posterPath, cast)
+      .as(Cast.castParser *)
+
+    new Movie(partialMovie.id, partialMovie.title, partialMovie.releaseDate, partialMovie.tmdbId, partialMovie.posterPath, cast)
   }
 
+  case class TmdbMovieEqualityByTmdbId(tmdbId: Long)(val tmdbMovie: TmdbMovie)
+  val ensureOnlyOneMovieUpdatePerTmdbIdConcurrently =
+    CacheBuilder.newBuilder()
+      .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)
+      .build(new CacheLoader[TmdbMovieEqualityByTmdbId, Movie]() {
+        override def load(tmdbMovieEqualityByTmdbId: TmdbMovieEqualityByTmdbId): Movie = {
+          createOrUpdateInt(tmdbMovieEqualityByTmdbId.tmdbMovie)
+        }
+      })
   def createOrUpdate(tmdbMovie: TmdbMovie): Movie = {
+    ensureOnlyOneMovieUpdatePerTmdbIdConcurrently.get(TmdbMovieEqualityByTmdbId(tmdbMovie.tmdbId)(tmdbMovie))
+  }
+  def createOrUpdateInt(tmdbMovie: TmdbMovie): Movie = {
     DB.withTransaction { implicit c =>
       val id = SQL("select id from movies where tmdbId = {tmdbId}").on(
         'tmdbId -> tmdbMovie.tmdbId).as(scalar[Long].singleOpt)
@@ -73,10 +87,9 @@ object Movie {
             'title -> tmdbMovie.title,
             'releaseDate -> tmdbMovie.releaseDate,
             'tmdbId -> tmdbMovie.tmdbId,
-            'posterPath -> tmdbMovie.posterPath
-            ).executeUpdate()
-            
-        val cast = Cast.createOrUpdate(id, tmdbMovie.cast)
+            'posterPath -> tmdbMovie.posterPath).executeUpdate()
+
+        val cast = Cast.createOrUpdate(id, tmdbMovie.cast.getOrElse(Nil))
         new Movie(id, tmdbMovie.title, tmdbMovie.releaseDate.get, tmdbMovie.tmdbId, tmdbMovie.posterPath.get, cast)
       } else {
         SQL("update movies set title={title} where id={id}").on(
@@ -89,7 +102,7 @@ object Movie {
           'posterPath -> tmdbMovie.posterPath,
           'id -> id.get).executeUpdate()
 
-        val cast = Cast.createOrUpdate(id.get, tmdbMovie.cast)
+        val cast = Cast.createOrUpdate(id.get, tmdbMovie.cast.getOrElse(Nil))
         new Movie(id.get, tmdbMovie.title, tmdbMovie.releaseDate.get, tmdbMovie.tmdbId, tmdbMovie.posterPath.get, cast)
       }
     }
