@@ -12,6 +12,13 @@ Scala play web application that recommends movies based on actors and movies you
 	
 	visit: http://localhost:9000
 
+### View Embedded H2 Db
+	> play
+	> h2-browser
+    visit: http://localhost:8082/
+    set JDBC URL as    jdbc:h2:mem:play;IFEXISTS=TRUE
+    and blank out username and password
+
 ## Philosophy
 
 ### Responsive Images

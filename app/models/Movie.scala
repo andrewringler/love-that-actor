@@ -11,7 +11,6 @@ import play.api.data.validation.ValidationError
 import play.api.libs.ws.WS
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.functional.syntax._
-import play.api.Logger
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 
@@ -89,8 +88,8 @@ object Movie {
             'tmdbId -> tmdbMovie.tmdbId,
             'posterPath -> tmdbMovie.posterPath).executeUpdate()
 
-        val cast = Cast.createOrUpdate(id, tmdbMovie.cast.getOrElse(Nil))
-        new Movie(id, tmdbMovie.title, tmdbMovie.releaseDate.get, tmdbMovie.tmdbId, tmdbMovie.posterPath.get, cast)
+//        val cast = Cast.createOrUpdate(id, tmdbMovie.cast.getOrElse(Nil))
+        new Movie(id, tmdbMovie.title, tmdbMovie.releaseDate.get, tmdbMovie.tmdbId, tmdbMovie.posterPath.get, Nil)
       } else {
         SQL("update movies set title={title} where id={id}").on(
           'title -> tmdbMovie.title,
@@ -102,9 +101,25 @@ object Movie {
           'posterPath -> tmdbMovie.posterPath,
           'id -> id.get).executeUpdate()
 
-        val cast = Cast.createOrUpdate(id.get, tmdbMovie.cast.getOrElse(Nil))
-        new Movie(id.get, tmdbMovie.title, tmdbMovie.releaseDate.get, tmdbMovie.tmdbId, tmdbMovie.posterPath.get, cast)
+//        val cast = Cast.createOrUpdate(id.get, tmdbMovie.cast.getOrElse(Nil))
+        new Movie(id.get, tmdbMovie.title, tmdbMovie.releaseDate.get, tmdbMovie.tmdbId, tmdbMovie.posterPath.get, Nil)
       }
     }
+  }
+  def update(id: Long, tmdbMovie: TmdbMovie): Boolean = {
+    DB.withTransaction { implicit c =>
+      SQL("update movies set title={title} where id={id}").on(
+        'title -> tmdbMovie.title,
+        'id -> id).executeUpdate()
+      SQL("update movies set releaseDate={releaseDate} where id={id}").on(
+        'releaseDate -> tmdbMovie.releaseDate,
+        'id -> id).executeUpdate()
+      SQL("update movies set posterPath={posterPath} where id={id}").on(
+        'posterPath -> tmdbMovie.posterPath,
+        'id -> id).executeUpdate()
+
+    }
+    Cast.createOrUpdate(id, tmdbMovie.cast.get)
+    true
   }
 }

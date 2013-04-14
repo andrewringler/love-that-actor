@@ -71,7 +71,7 @@ object Actor {
         new Actor(id, tmdbActor.name, tmdbActor.tmdbId, tmdbActor.profilePath.get)
       } else {
         SQL("update actors set name={name} where id={id}").on(
-          'title -> tmdbActor.name,
+          'name -> tmdbActor.name,
           'id -> id.get).executeUpdate()
         SQL("update actors set profilePath={profilePath} where id={id}").on(
           'profilePath -> tmdbActor.profilePath,
