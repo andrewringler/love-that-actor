@@ -48,6 +48,8 @@ object Cast {
     DB.withConnection { implicit c =>
       val id: Long = SQL("select next value for cast_id_seq").as(scalar[Long].single)
 
+      // TODO character actually contains multiple fields like:
+      // Gary Johnston (voice) / Joe (voice) / Kim Jong Il (voice) / ...
       SQL("insert into cast (id, character, actorId, movieId) values ({id}, {character},{actorId},{movieId})").on(
         'id -> id,
         'character -> tmdbCast.character.get,

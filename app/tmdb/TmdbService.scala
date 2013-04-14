@@ -15,7 +15,7 @@ import play.api.cache.Cache
 import play.api.libs.concurrent.Akka
 import play.api.libs.functional.syntax.functionalCanBuildApplicative
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.__
+import play.api.libs.json._
 import play.api.libs.ws.WS
 import play.api.http.Status
 
@@ -160,6 +160,41 @@ object TmdbService {
             false
           }
         }
+    }
+  }
+
+  // Config
+  // TODO pull poster size from config
+  lazy val tmdbConfigSlow: TmdbConfig = tmdbGetConfigSlow
+
+  case class TmdbConfig(baseUrl: String, secureBaseUrl: String)
+
+  def tmdbGetConfigSlow(): TmdbConfig = {
+    Cache.getOrElse[TmdbConfig]("tmdb.config") {
+      val result = WS.url("http://api.themoviedb.org/3/configuration")
+        .withQueryString(("api_key", Global.tmdbApiKey))
+        .get().map { response =>
+          if (response.status == Status.OK) {
+            implicit val tmdbConfigReads: Reads[TmdbConfig] = (
+              (__ \ "images" \ "base_url").read[String] ~
+              (__ \ "images" \ "secure_base_url").read[String])(TmdbConfig)
+            response.json.validate[TmdbConfig].fold(
+              valid = (config =>
+                config),
+              invalid = (e => {
+                Logger.error("Invalid JSON " + e.toString)
+                // TODO handle
+                throw new RuntimeException
+              }))
+          } else {
+            Logger.error("GET " + response.status + " Problem trying to call tmdb " + response.body)
+            // TODO handle
+            throw new RuntimeException
+          }
+        }
+      import scala.concurrent._
+      import scala.concurrent.duration._
+      Await.result(result, 15 seconds)
     }
   }
 }
