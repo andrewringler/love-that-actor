@@ -13,7 +13,8 @@ CREATE TABLE actors (
 CREATE SEQUENCE cast_id_seq;
 CREATE TABLE cast (
 	id bigint NOT NULL DEFAULT nextval('cast_id_seq') PRIMARY KEY,
-	character varchar(1024) NOT NULL,
+	characterName varchar(1024) NOT NULL,
+	castOrder int NOT NULL,
 	actorId bigint NOT NULL,
 	movieId bigint NOT NULL,
 		

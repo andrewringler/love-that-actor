@@ -28,12 +28,7 @@ object Like {
 
     likes.map {
       case like =>
-        val cast = SQL("""
-    			select c.id as castId, c.character, a.id as actorId, a.name, a.tmdbId, a.profilePath
-    			from cast c join actors a on c.actorId = a.id
-    			where c.movieId = {movieId}
-    			""").on('movieId -> like.movie.id)
-          .as(Cast.castParser *)
+        val cast = Cast.all(like.movie.id) 
         new Like(like.id, new Movie(like.movie.id, like.movie.title, like.movie.releaseDate, like.movie.tmdbId, like.movie.posterPath, cast))
     }
   }

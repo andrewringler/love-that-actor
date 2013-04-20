@@ -20,7 +20,15 @@ case class Movie(
   releaseDate: Date,
   tmdbId: Long,
   posterPath: String,
-  cast: List[Cast])
+  cast: List[Cast]) {
+  def abbrTitle() = {
+    title.substring(0, 20)
+  }
+  def needsUpdate = {
+    // TODO check age of record
+    !cast.isEmpty
+  }
+}
 
 case class TmdbMovie(
   title: String,
@@ -48,7 +56,7 @@ object Movie {
       .as(movieParser.single)
 
     val cast = SQL("""
-         select c.id as castId, c.character, a.id as actorId, a.name, a.tmdbId, a.profilePath
+         select c.id as castId, c.characterName, a.id as actorId, a.name, a.tmdbId, a.profilePath
          from cast c join actors a on c.actorId = a.id
          where c.movieId = {movieId}
          """).on('movieId -> id)
@@ -57,8 +65,13 @@ object Movie {
     new Movie(partialMovie.id, partialMovie.title, partialMovie.releaseDate, partialMovie.tmdbId, partialMovie.posterPath, cast)
   }
 
+  /* Ensure we only create new movies if we in fact don't already
+   * have a mapping for a particular Tmdb ID
+   * this is sort of an identity map, although we only keep around
+   * really recent records
+   */
   case class TmdbMovieEqualityByTmdbId(tmdbId: Long)(val tmdbMovie: TmdbMovie)
-  val ensureOneMovieUpdatePerTmdbId =
+  val partialIdentityMap =
     CacheBuilder.newBuilder()
       .expireAfterAccess(5, java.util.concurrent.TimeUnit.SECONDS)
       .build(new CacheLoader[TmdbMovieEqualityByTmdbId, Movie]() {
@@ -67,9 +80,9 @@ object Movie {
         }
       })
   def createOrUpdate(tmdbMovie: TmdbMovie): Movie = {
-    ensureOneMovieUpdatePerTmdbId.get(TmdbMovieEqualityByTmdbId(tmdbMovie.tmdbId)(tmdbMovie))
+    partialIdentityMap.get(TmdbMovieEqualityByTmdbId(tmdbMovie.tmdbId)(tmdbMovie))
   }
-  def createOrUpdateInt(tmdbMovie: TmdbMovie): Movie = {
+  private def createOrUpdateInt(tmdbMovie: TmdbMovie): Movie = {
     DB.withTransaction { implicit c =>
       val id = SQL("select id from movies where tmdbId = {tmdbId}").on(
         'tmdbId -> tmdbMovie.tmdbId).as(scalar[Long].singleOpt)
@@ -88,7 +101,7 @@ object Movie {
             'tmdbId -> tmdbMovie.tmdbId,
             'posterPath -> tmdbMovie.posterPath).executeUpdate()
 
-//        val cast = Cast.createOrUpdate(id, tmdbMovie.cast.getOrElse(Nil))
+        //        val cast = Cast.createOrUpdate(id, tmdbMovie.cast.getOrElse(Nil))
         new Movie(id, tmdbMovie.title, tmdbMovie.releaseDate.get, tmdbMovie.tmdbId, tmdbMovie.posterPath.get, Nil)
       } else {
         SQL("update movies set title={title} where id={id}").on(
@@ -101,7 +114,7 @@ object Movie {
           'posterPath -> tmdbMovie.posterPath,
           'id -> id.get).executeUpdate()
 
-//        val cast = Cast.createOrUpdate(id.get, tmdbMovie.cast.getOrElse(Nil))
+        //        val cast = Cast.createOrUpdate(id.get, tmdbMovie.cast.getOrElse(Nil))
         new Movie(id.get, tmdbMovie.title, tmdbMovie.releaseDate.get, tmdbMovie.tmdbId, tmdbMovie.posterPath.get, Nil)
       }
     }

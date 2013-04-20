@@ -13,6 +13,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.Controller
 import tmdb.TmdbService
+import tmdb.TmdbSearchService
 
 object Application extends Controller {
   def javascriptRoutes = Action { implicit request =>
@@ -59,7 +60,7 @@ object Application extends Controller {
 
   def searchAutoComplete(s: String) = Action {
     Async {
-      TmdbService.tmdbMovieSearch(s).map {
+      TmdbSearchService.tmdbMovieAutoComplete(s).map {
         case movies => Ok(moviesToJSonAutocomplete(movies))
       }
     }
@@ -70,7 +71,7 @@ object Application extends Controller {
       errors => BadRequest(views.html.searchResults(Nil, errors)),
       s => {
         Async {
-          TmdbService.tmdbMovieSearch(s).map {
+          TmdbSearchService.tmdbMovieSearch(s).map {
             case movies => Ok(views.html.searchResults(movies, searchForm))
           }
         }

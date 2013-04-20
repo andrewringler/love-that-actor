@@ -11,22 +11,26 @@ case class Cast(id: Long, character: String, actor: Actor)
 
 object Cast {
   val castParser = {
-    get[Long]("castId") ~
-      get[String]("character") ~
-      get[Long]("actorId") ~
+    get[Long]("id") ~
+      get[String]("characterName") ~
+      get[Long]("id") ~
       get[String]("name") ~
       get[Long]("tmdbId") ~
       get[String]("profilePath") map {
-        case castId ~ character ~ actorId ~ name ~ tmdbId ~ profilePath => Cast(castId, character, new Actor(actorId, name, tmdbId, profilePath))
+        case castId ~ characterName ~ actorId ~ name ~ tmdbId ~ profilePath => Cast(castId, characterName, new Actor(actorId, name, tmdbId, profilePath))
       }
   }
 
   def all(movieId: Long): List[Cast] = DB.withConnection { implicit c =>
+    /* NOTE I would have love to alias the columns, c.id as castId
+     * and a.id as actorId, but the postresql & h2 drivers drop these names over the wire
+     * https://groups.google.com/forum/?fromgroups=#!topic/play-framework/YfLF89ztFKQ
+     */
     SQL("""
-        select c.id as castId, actorId, a.name, a.tmdbId, a.profilePath
-        from cast c join actors a on c.actorId = a.id
-        where c.movieId = {movieId}
-        order by c.order asc
+        select c.id, c.characterName, a.id, a.name, a.tmdbId, a.profilePath
+    	from cast c, actors a
+    	where c.movieId = {movieId} and c.actorId = a.id
+    	order by castOrder
         """).on('movieId -> movieId)
       .as(castParser *)
   }
@@ -50,9 +54,10 @@ object Cast {
 
       // TODO character actually contains multiple fields like:
       // Gary Johnston (voice) / Joe (voice) / Kim Jong Il (voice) / ...
-      SQL("insert into cast (id, character, actorId, movieId) values ({id}, {character},{actorId},{movieId})").on(
+      SQL("insert into cast (id, characterName, castOrder, actorId, movieId) values ({id}, {characterName},{castOrder},{actorId},{movieId})").on(
         'id -> id,
-        'character -> tmdbCast.character.get,
+        'characterName -> tmdbCast.character.get,
+        'castOrder -> tmdbCast.order,
         'actorId -> actor.id,
         'movieId -> movieId)
         .executeUpdate()
