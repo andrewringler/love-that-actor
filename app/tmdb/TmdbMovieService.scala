@@ -59,7 +59,7 @@ object TmdbMovieService {
     Akka.future {
       populateTmdbFullMovieInfo(movie)
     } onFailure {
-      case e: Exception => Logger.error("! issue trying to populate full movie info for " + movie.abbrTitle, e)
+      case e: Exception => Logger.error("!1 issue trying to populate full movie info for " + movie.abbrTitle, e)
     }
   }
 
@@ -76,14 +76,14 @@ object TmdbMovieService {
           retry = false
           val result = pendingRequests.get(movie)
           result onFailure {
-            case e: Exception => Logger.error("! issue trying to populate full movie info for " + movie.abbrTitle, e)
+            case e: Exception => Logger.error("!2 issue trying to populate full movie info for " + movie.abbrTitle, e)
           }
           result onSuccess {
-            case result: Boolean if !result => Logger.error("! issue trying to populate full movie info for " + movie.abbrTitle + " check previous logs")
+            case result: Boolean if !result => Logger.error("!3 issue trying to populate full movie info for " + movie.abbrTitle + " check previous logs")
           }
         } catch {
-          case e: ExecutionException if e.getCause().isInstanceOf[NotAvailableException] => {
-            Logger.debug("! exceeded api limits retrying fetching " + movie.abbrTitle)
+          case e: Exception if e.getCause().isInstanceOf[NotAvailableException] => {
+//            Logger.debug("!4 exceeded api limits retrying fetching " + movie.abbrTitle)
             retry = true
           }
         }
@@ -122,12 +122,13 @@ object TmdbMovieService {
                 }
               }),
               invalid = (e => {
-                Logger.error("! invalid json returned " + e)
-                Logger.debug("! response body " + response.body)
+                Logger.error("!5 invalid json returned " + e)
+                Logger.debug("!6 response body " + response.body)
                 false
               }))
           } else {
-            Logger.error("! invalud response status " + response.status + " body= " + response.body)
+            // TODO handle 503 (unavailable)
+            Logger.error("!7 invalid response status " + response.status + " body= " + response.body)
             false
           }
         }

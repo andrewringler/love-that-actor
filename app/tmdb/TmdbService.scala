@@ -43,7 +43,8 @@ object TmdbService extends SentrySupport {
 
   // Config
   // TODO pull poster size from config
-  lazy val tmdbConfigSlow: TmdbConfig = tmdbGetConfigSlow
+  // TODO should not be holding up app startup for this
+  val tmdbConfigSlow: TmdbConfig = tmdbGetConfigSlow
 
   case class TmdbConfig(baseUrl: String, secureBaseUrl: String)
 
