@@ -22,11 +22,11 @@ case class Movie(
   posterPath: String,
   cast: List[Cast]) {
   def abbrTitle() = {
-    title.substring(0, 20)
+    title.substring(0, Math.min(title.length(), 20))
   }
   def needsUpdate = {
     // TODO check age of record
-    !cast.isEmpty
+    cast.isEmpty
   }
 }
 

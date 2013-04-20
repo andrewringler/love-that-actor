@@ -7,6 +7,15 @@
 
     @movie.title @movie.releaseDate.format("yyyy")
     <img class="large" src="@w500(movie)" alt="@movie.title" />
+    
+    <ul>
+    	@movie.cast.map { cast =>
+        	<li>
+        		@cast.actor.name
+        	</li>
+        }
+    </ul>
+    
     @form(routes.Application.newLike(movie.id)) {
         <input type="submit" value="Like">
     }

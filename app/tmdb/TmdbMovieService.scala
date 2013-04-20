@@ -79,7 +79,6 @@ object TmdbMovieService {
             case e: Exception => Logger.error("! issue trying to populate full movie info for " + movie.abbrTitle, e)
           }
           result onSuccess {
-            case result: Boolean if result => Logger.info("added '" + movie.title)
             case result: Boolean if !result => Logger.error("! issue trying to populate full movie info for " + movie.abbrTitle + " check previous logs")
           }
         } catch {
@@ -115,6 +114,7 @@ object TmdbMovieService {
               valid = (tmdbMovie => {
                 if (tmdbMovie.releaseDate.isDefined && tmdbMovie.posterPath.isDefined && tmdbMovie.cast.isDefined) {
                   Movie.update(movie.id, tmdbMovie)
+                  Logger.info("added '" + movie.title)
                   true
                 } else {
                   Logger.debug("SKIP " + tmdbMovie.title + " missing fields")
