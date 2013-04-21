@@ -142,6 +142,10 @@ object TmdbSearchService extends SentrySupport {
               Logger.error("Invalid JSON during query '+s+'" + e.toString)
               Nil
             }))
+        } else if (response.status == Status.SERVICE_UNAVAILABLE) {
+          // TMDB API Limit exceeded
+          Logger.warn("! oops we got a " + Status.SERVICE_UNAVAILABLE + " from tmdb")
+          throw new NotAvailableException("search", "oops we got a " + Status.SERVICE_UNAVAILABLE + " from tmdb", new Throwable)
         } else {
           Logger.error("GET " + response.status + " Problem trying to call tmdb " + response.body)
           Nil

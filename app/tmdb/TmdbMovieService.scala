@@ -83,7 +83,7 @@ object TmdbMovieService {
           }
         } catch {
           case e: Exception if e.getCause().isInstanceOf[NotAvailableException] => {
-//            Logger.debug("!4 exceeded api limits retrying fetching " + movie.abbrTitle)
+            //            Logger.debug("!4 exceeded api limits retrying fetching " + movie.abbrTitle)
             retry = true
           }
         }
@@ -126,6 +126,10 @@ object TmdbMovieService {
                 Logger.debug("!6 response body " + response.body)
                 false
               }))
+          } else if (response.status == Status.SERVICE_UNAVAILABLE) {
+            // TMDB API Limit exceeded
+            Logger.warn("! oops we got a " + Status.SERVICE_UNAVAILABLE + " from tmdb")
+            throw new NotAvailableException("movie", "oops we got a " + Status.SERVICE_UNAVAILABLE + " from tmdb", new Throwable)
           } else {
             // TODO handle 503 (unavailable)
             Logger.error("!7 invalid response status " + response.status + " body= " + response.body)

@@ -44,36 +44,31 @@ object TmdbService extends SentrySupport {
   // Config
   // TODO pull poster size from config
   // TODO should not be holding up app startup for this
-  val tmdbConfigSlow: TmdbConfig = tmdbGetConfigSlow
-
   case class TmdbConfig(baseUrl: String, secureBaseUrl: String)
-
-  def tmdbGetConfigSlow(): TmdbConfig = {
-    Cache.getOrElse[TmdbConfig]("tmdb.config") {
-      tmdbApiSentry {
-        val result = WS.url("http://api.themoviedb.org/3/configuration")
-          .withQueryString(("api_key", Global.tmdbApiKey))
-          .get().map { response =>
-            if (response.status == Status.OK) {
-              implicit val tmdbConfigReads: Reads[TmdbConfig] = (
-                (__ \ "images" \ "base_url").read[String] ~
-                (__ \ "images" \ "secure_base_url").read[String])(TmdbConfig)
-              response.json.validate[TmdbConfig].fold(
-                valid = (config =>
-                  config),
-                invalid = (e => {
-                  Logger.error("Invalid JSON " + e.toString)
-                  // TODO handle
-                  throw new RuntimeException
-                }))
-            } else {
-              Logger.error("GET " + response.status + " Problem trying to call tmdb " + response.body)
-              // TODO handle
-              throw new RuntimeException
-            }
+  val tmdbConfigSlow: TmdbConfig = {
+    tmdbApiSentry {
+      val result = WS.url("http://api.themoviedb.org/3/configuration")
+        .withQueryString(("api_key", Global.tmdbApiKey))
+        .get().map { response =>
+          if (response.status == Status.OK) {
+            implicit val tmdbConfigReads: Reads[TmdbConfig] = (
+              (__ \ "images" \ "base_url").read[String] ~
+              (__ \ "images" \ "secure_base_url").read[String])(TmdbConfig)
+            response.json.validate[TmdbConfig].fold(
+              valid = (config =>
+                config),
+              invalid = (e => {
+                Logger.error("Invalid JSON " + e.toString)
+                // TODO handle
+                throw new RuntimeException
+              }))
+          } else {
+            Logger.error("GET " + response.status + " Problem trying to call tmdb " + response.body)
+            // TODO handle
+            throw new RuntimeException
           }
-        Await.result(result, 15 seconds)
-      }
+        }
+      Await.result(result, 15 seconds)
     }
   }
 }
